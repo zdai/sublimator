@@ -43,7 +43,8 @@ function update_status(state){
 		window.tcBlocks[i].update(pvArray[i],svArray[i],pwrArray[i],modes[i]);
 	}
 
-	$('#vacuumState').text(state.vacuum[0]);
+	var vcReading=state.vacuum[0]+'.'+state.vacuum[1]+'E'+state.vacuum.substring(2,4);
+	$('#vacuumReading').text(vcReading);
 	$('#processLabel').text(state.label);
 	$('#elapseTime').text(state.elapse+'s');
 }

@@ -1,4 +1,6 @@
 import time, sys
+sys.path.append('/usr/local/lib/python2.7/dist-packages')
+
 import tornado.ioloop
 from tornado.web import *
 import tornado.websocket
