@@ -43,10 +43,22 @@ class SublimatorServer(GenericDelegate):
 	def get_chart(self,args=None):
 
 		dat={
-			'time'	:self.elapse,
-			'vacuum':self.vacuum_record,
-			'temp'	:self.temp_record
+			'time'	:self._jsonize_elapse(),
+			'vacuum':self._jsonize_vacuum_record()
 		}
+		return {'errCode':'ERR_OK','logMsg':'Loop back experiment!','data':dat}
+
+	def _jsonize_elapse(self):
+		dt_array=[]
+		for i,v in enumerate(self.elapse):
+			dt_array.append(v.strftime("%H:%M:%S"))
+		return dt_array
+
+	def _jsonize_vacuum_record(self):
+		vc_array=[]
+		for i,v in enumerate(self.vacuum_record):
+			vc_array.append(self.vacuum._get_decimal(v))
+		return vc_array
 
 	def wake(self,args=None):
 		if len(self.elapse):
@@ -56,11 +68,10 @@ class SublimatorServer(GenericDelegate):
 		seconds = int((datetime.now()-prev_point).total_seconds())
 
 		if seconds >= self.sample_interval:
-			#self.take_sample()
-			pass
+			self.take_sample()
 
 	def take_sample(self):
-		self.elapse.append(datatime.now())
+		self.elapse.append(datetime.now())
 		self.vacuum_record.append(self.vacuum.get_vacuum())
 		for x in range(3):
 			self.temp_record[x].append(self.temp_ctrl[x].get_temp_pv())

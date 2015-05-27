@@ -6,6 +6,17 @@ class DummyVacuumReader(object):
 	def __init__(self,port,timeout):
 		pass
 
+	def get_vacuum(self):
+		return '18-2'
+
+	def _get_decimal(self,hex_str):
+		decimal		=(int(hex_str[0],16)*100) + int(hex_str[1],16)
+		exponent	=int(hex_str[3],16)
+		if hex_str[2] == '-':
+			exponent = -exponent
+		exponent	=exponent-2
+		return decimal * pow(10,exponent)
+
 class VacuumReader(object):
 	def __init__(self,port,timeout,echo=True,debug=True):
 		try:

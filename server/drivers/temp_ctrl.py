@@ -6,6 +6,12 @@ class DummyTempController(object):
 	def __init__(self,port,timeout):
 		pass
 
+	def get_temp_pv(self):
+		return 102.3
+
+	def get_temp_sv(self):
+		return 25.4
+
 class TempController(object):
 	def __init__(self,port,baud=9600,timeout=1,echo=True,debug=True):
 		try:

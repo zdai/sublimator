@@ -56,19 +56,26 @@ function update_chart(raw){
 	var time	=raw.time;
 
 	var vacSeries = [];
-	for(var i=0;i<time.length;i++)
-		vacSeries.push([time[i],vacuum[i]]);
-	
-	window.chartManager.appendSeries('vacuum',vacSeries,false);	
+	for(var i=0; i<time.length; i++){
+		var tm=time[i];
+		var vc=vacuum[i];
+		vacSeries.push([tm,vc]);
+	}
 
+	var chartSeries=[vacSeries];
+	window.chartManager.appendSeries('vacuum',chartSeries,false);	
+
+/*
 	for(var i=0;i<tempArr.length;i++){
 		var tempRaw = tempArr[i];
 		var tempSeries = [];
 		for(var t=0;t<time.length;t++)
 			tempSeries.push([time[t],tempRaw[t]]);
 		
-		window.chartManager.appendSeries('temp'+i,tempSeries,false);	
+		window.chartManager.appendSeries('temp'+i,tempSeries,true);	
 	}
+	*/
+
 }
 
 /***************************************************************************

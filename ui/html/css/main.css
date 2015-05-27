@@ -268,7 +268,11 @@
 
 	#lineChartPanel{
 		width:100%;
-		height:800px;
+		height:600px;
 		background-color:lightgrey;
 	}
 
+	#temp_n_vacuum{
+		width:100%;
+		height:100%;
+		}
