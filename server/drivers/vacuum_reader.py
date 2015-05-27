@@ -17,7 +17,7 @@ class VacuumReader(object):
 		except:
 			print("unable to connect to the vacuum reader through port\
 			 %s! Err message %s" % (port,sys.exc_info()))
-			self.serial_interface =DummyVacuumReader(port,baud,timeout)
+			self.serial_interface =DummyVacuumReader(port,timeout)
 			self.dummy=True
 
 		self.debug 		=debug
@@ -73,10 +73,15 @@ class VacuumReader(object):
 			return
 
 		self.err_code ='OK00'
-		decimal		=(int(rspn[expected-6],16)*100) + int(rspn[expected-5],16)
-		exponent	=int(rspn[expected-3],16)
-		if rspn[expected-4] == '-':
+		self.rsp_dat  =rspn[expected-6:expected-2]
+
+	def _get_decimal(self,hex_str):
+		decimal		=(int(hex_str[0],16)*100) + int(rspn[1],16)
+		exponent	=int(rspn[3],16)
+		if rspn[2] == '-':
 			exponent = -exponent
 		exponent	=exponent-2
-		self.rsp_dat  =decimal * pow(10,exponent)
+		return decimal * pow(10,exponent)
+
+
 
