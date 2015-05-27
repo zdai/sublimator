@@ -22,10 +22,6 @@ class VacuumReader(object):
 
 		self.debug 		=debug
 		self.echo		=echo
-		self.dev_addr	='01'
-		self.func_code	='03'
-		self.reg_addr	='006B'
-		self.reg_cnt	='0002'
 		self.rsp_dat	=0.0
 		self.err_code	='ER00'
 		self.max_retry  =3
@@ -36,16 +32,16 @@ class VacuumReader(object):
 			self.serial_interface.flushOutput()
 			self.serial_interface.flush()
 
-	def read_vacuum(self):
+	def read_vacuum(self,dev_addr):
 		if self.dummy:
 			return 0
 
 		self.err_code	='ER00'
 		self.retry =0
 		while (self.err_code != "OK00") and (self.retry < self.max_retry):
-			self.cmd = self.dev_addr+self.func_code+self.reg_addr+self.reg_cnt
+			self.cmd = dev_addr+'03006B0002'
 			self.serial_interface.write(self.cmd.decode('hex'))
-			self.recv_response()
+			self.recv_response(dev_addr)
 			self.retry+=1
 
 		return self.rsp_dat
@@ -54,7 +50,7 @@ class VacuumReader(object):
 		rspn  =self.serial_interface.read(100) #waiting for time out
 		return rspn
 
-	def recv_response(self):
+	def recv_response(self,dev_addr):
 		rspn =self.serial_read()
 		if self.echo:
 			expected =15
@@ -66,16 +62,14 @@ class VacuumReader(object):
 
 		dev  =rspn[expected-9].encode('hex')
 		func =rspn[expected-8].encode('hex')
-		cnt	 =rspn[expected-7].encode('hex')
-
-		if dev!=self.dev_addr or func!=self.func_code:
+		if dev!=dev_addr or func!='03':
 			self.err_code ='ERR01'
 			return
 
 		self.err_code ='OK00'
 		self.rsp_dat  =rspn[expected-6:expected-2]
 
-	def _get_decimal(self,hex_str):
+	def get_decimal(self,hex_str):
 		decimal		=(int(hex_str[0],16)*100) + int(rspn[1],16)
 		exponent	=int(rspn[3],16)
 		if rspn[2] == '-':

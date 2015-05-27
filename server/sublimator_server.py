@@ -14,7 +14,8 @@ class SublimatorServer(GenericDelegate):
 		super(SublimatorServer, self).wake(args)
 
 	def get_status(self,args=None):
-		vac=self.vacuum.read_vacuum()
+		vac0=self.vacuum.read_vacuum('01')
+		vac1=self.vacuum.read_vacuum('02')
 		dat={
 			'label'		:'Test Run',
 			'elapse'	:7350,
@@ -22,7 +23,7 @@ class SublimatorServer(GenericDelegate):
 			'temp_sv'	:[66.0,75.0,105.0],
 			'temp_pwr'	:[80.0,90.0,95.5],
 			'temp_mode'	:['M','A','A'],
-			'vacuum'	:vac
+			'vacuum'	:[vac0,vac1]
 		}
 
 		return {'errCode':'ERR_OK','logMsg':'Loop back experiment!','data':dat}
