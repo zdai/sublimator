@@ -32,6 +32,7 @@ $(document).ready(function(){
 
 function run(){
 	window.server.post({'action':'get_status'},update_status);
+	window.server.post({'action':'get_chart'},update_chart);
 }
 
 function update_status(state){
@@ -47,6 +48,27 @@ function update_status(state){
 	$('#vacuumReading').text(vcReading);
 	$('#processLabel').text(state.label);
 	$('#elapseTime').text(state.elapse+'s');
+}
+
+function update_chart(raw){
+	var vacuum 	=raw.vacuum;
+	var tempArr	=raw.temps;
+	var time	=raw.time;
+
+	var vacSeries = [];
+	for(var i=0;i<time.length;i++)
+		vacSeries.push([time[i],vacuum[i]]);
+	
+	window.chartManager.appendSeries('vacuum',vacSeries,false);	
+
+	for(var i=0;i<tempArr.length;i++){
+		var tempRaw = tempArr[i];
+		var tempSeries = [];
+		for(var t=0;t<time.length;t++)
+			tempSeries.push([time[t],tempRaw[t]]);
+		
+		window.chartManager.appendSeries('temp'+i,tempSeries,false);	
+	}
 }
 
 /***************************************************************************
