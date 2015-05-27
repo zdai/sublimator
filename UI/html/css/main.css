@@ -1,0 +1,250 @@
+/* Header */
+	#header-wrapper {
+		background-color: #007294;
+		background-image: -moz-linear-gradient(top, #008dab, #007294);
+		background-image: -webkit-linear-gradient(top, #008dab, #007294);
+		background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#008dab), to(#007294));
+		background-image: -ms-linear-gradient(top, #008dab, #007294);
+		background-image: -o-linear-gradient(top, #008dab, #007294);
+		background-image: linear-gradient(top, #008dab, #007294);
+		height:80px;
+		padding: 20px 40px 0 40px;
+	}
+
+	#header {
+		position: relative;
+		padding: 0 40px 0 40px;
+		border-radius: 10px;
+		border: solid 1px #006e8b;
+		box-shadow: inset 0px 0px 0px 1px #12a0bf, 0px 1px 4px 0px rgba(0,0,0,0.10);
+		background-color: #007b9d;
+		background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#008ead), to(#007b9d));
+		background-image: -ms-linear-gradient(top, #008ead, #007b9d);
+		background-image: -o-linear-gradient(top, #008ead, #007b9d);
+		background-image: linear-gradient(top, #008ead, #007b9d);
+		height: 65px;
+	}
+
+		#header h1 {
+			position: absolute;
+			left: 40px;
+			top: 0px;
+			color: #fff;
+			font-size: 2.6em;
+			letter-spacing: -2px;
+			line-height: 65px;
+			margin: 0 0 0 0;
+		}
+
+		#header h1 a {
+			color: #fff;
+			text-decoration: none;
+		}
+		
+		#header nav {
+			position: absolute;
+			right: 40px;
+			top: 1px;
+			line-height: 65px;
+			font-size: 1.3em;
+			letter-spacing: -1px;
+		}
+		
+			#header nav a {
+				display: inline-block;
+				text-decoration: none;
+				color: #fff;
+				padding: 0 25px 0 25px;
+				outline: 0;
+			}
+			
+			#header nav a.current-page-item {
+				background-color: #007897;
+				background-image: -moz-linear-gradient(top, #007b99, #007897);
+				background-image: -webkit-linear-gradient(top, #007b99, #007897);
+				background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#007b99), to(#007897));
+				background-image: -ms-linear-gradient(top, #007b99, #007897);
+				background-image: -o-linear-gradient(top, #007b99, #007897);
+				background-image: linear-gradient(top, #007b99, #007897);
+				box-shadow: inset 0px 1px 5px 1px rgba(0,0,0,0.1), 0px 0px 5px 1px rgba(255,255,255,0.1);
+			}
+
+			#header nav a:hover {
+				background-color: #0882a1;
+				background-image: -moz-linear-gradient(top, #0782a0, #077d9b);
+				background-image: -webkit-linear-gradient(top, #0782a0, #077d9b);
+				background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0782a0), to(#077d9b));
+				background-image: -ms-linear-gradient(top, #0782a0, #077d9b);
+				background-image: -o-linear-gradient(top, #0782a0, #077d9b);
+				background-image: linear-gradient(top, #0782a0, #077d9b);
+				box-shadow: inset 0px 1px 5px 1px rgba(0,0,0,0.05), 0px 0px 5px 1px rgba(255,255,255,0.05);
+			}
+
+	/* test plate control menu button */
+		#testCtrl nav {
+			line-height: 20px;
+			font-size: 1.0em;
+			letter-spacing: -1px;
+			margin-bottom:2px;
+		}
+		
+			#testCtrl nav a {
+				display: inline-block;
+				text-decoration: none;
+				color: black;
+				padding: 0 5px 0 5px;
+				outline: 0;
+			}
+			
+			#testCtrl nav a.current-test-menu {
+				background-color: #007897;
+				color: white;
+				background-image: -moz-linear-gradient(top, #007b99, #007897);
+				background-image: -webkit-linear-gradient(top, #007b99, #007897);
+				background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#007b99), to(#007897));
+				background-image: -ms-linear-gradient(top, #007b99, #007897);
+				background-image: -o-linear-gradient(top, #007b99, #007897);
+				background-image: linear-gradient(top, #007b99, #007897);
+				box-shadow: inset 0px 1px 5px 1px rgba(0,0,0,0.1), 0px 0px 5px 1px rgba(255,255,255,0.1);
+			}
+
+		.settingRow {
+			margin-top:5px;
+			margin-bottom:5px;
+		}
+
+		.settingRow h3 {
+			margin-top:5px;
+			margin-bottom:5px;
+			background-color: lightblue;
+			color: black;
+			font-size: 1.2em;
+			letter-spacing: -1px;
+			font-weight:bold;
+		}
+
+/* main page layout */
+	body {
+		background-color: lightgrey;
+	}
+
+/*===================================================*/
+/* control pannel, includes                          */
+/* temperature and vaccum controller                 */
+/*===================================================*/
+	#controlPanel{
+		width:1900;
+		margin-left:0px;
+	}
+
+		#controlPanel > * {
+			float:left;	
+			margin-right:10px;
+			margin-top:10px;
+		}
+
+/*===================================================*/
+/* temperature controller pannel                     */
+/*===================================================*/
+	.tempCtrlBlock{
+		width: 355px;
+		border: 1px solid black;
+		border-style:ridge;
+		background-color:#FFFeF0;
+	}
+		.tempCtrlBlock h3{
+			width:100%;
+			margin-top:0px;
+			margin-left:0px;
+			margin-bottom:5px;
+			color: white;
+			font-size: 1.2em;
+			font-weight:bold;
+			background-color: grey;
+			letter-spacing: -1px;
+		}
+
+		.tempCtrlBlock > *{
+			width: 340px;
+			margin-left:5px;
+			margin-top:5px;
+		}
+
+		.tempCtrlDisp{
+			color:white;
+			border-radius: 5px;
+			background-color:black;
+		}
+
+		.tempPV {
+			color:green;	
+			font-weight:bold;
+		}
+
+		.tempSV {
+			font-weight:bold;
+			color:red;	
+		}
+		.tempPwr {
+			font-weight:bold;
+			color:yellow;	
+		}
+
+		.tempCtrlOut {
+			width: 4em;
+		}
+		.tempCtrlIn {
+			width: 4em;
+		}
+
+		#tempSetting{
+			border:1px solid black;
+		}
+		.tempSchTgt{
+			width:4em;
+		}
+
+		.tempSchTime{
+			width:4em;
+		}
+
+		.tempModeCtrl{
+			margin-left:8px;
+		}
+
+	#globalState{
+		width:360px;
+		border:1px;
+		border-style:ridge;
+		background-color:#FFFeF0;
+	}
+/*===================================================*/
+/* temperature control scheduler                     */
+/*===================================================*/
+	#tempCtrlSch{
+		position:fixed;
+		left: 400px;
+		top:300px;
+		width:360px;
+		border:1px;
+		border-style:ridge;
+		background-color:#FFFeF0;
+	}
+		#tempCtrlId{
+			color:red;
+		}
+		#tempCtrlSch > *{
+			float:left;
+		}
+		#tempCtrlSch > button{
+			margin-top:2px;
+			width: 60px;
+		}
+
+		.ctrlBlock > header{
+			background-color:grey;
+			color:white;
+			font-size: 1.2em;
+			font-weight:bold;
+			width:100%
+		}
