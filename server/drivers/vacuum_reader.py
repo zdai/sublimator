@@ -40,24 +40,18 @@ class VacuumReader(object):
 		if self.dummy:
 			return 0
 
-		self.serial_interface.flush()
-		time.sleep(0.1) # important! need to wait for the write buffer to be empty
 		self.err_code	='ER00'
 		self.retry =0
 		while (self.err_code != "OK00") and (self.retry < self.max_retry):
 			self.cmd = self.dev_addr+self.func_code+self.reg_addr+self.reg_cnt
 			self.serial_interface.write(self.cmd.decode('hex'))
-			self.serial_interface.flush()
 			self.recv_response()
 			self.retry+=1
 
 		return self.rsp_dat
 
 	def serial_read(self):
-		self.serial_interface.flushInput()
-		time.sleep(0.1) # need to wait for the write buffer to be empty
-		rspn=self.serial_interface.read(1) #waiting for time out
-		rspn += self.serial_interface.readline()
+		rspn  =self.serial_interface.read(100) #waiting for time out
 		return rspn
 
 	def recv_response(self):
@@ -70,18 +64,11 @@ class VacuumReader(object):
 			self.err_code ='ERR00'
 			return
 
-		if self.debug:
-			print rspn
+		dev  =rspn[expected-9].encode('hex')
+		func =rspn[expected-8].encode('hex')
+		cnt	 =rspn[expected-7].encode('hex')
 
-		dev  =rspn[0].encode('hex')
-		func =rspn[1].encode('hex')
-		cnt	 =rspn[2].encode('hex')
-
-		if self.debug:
-			print rspn
-			print (' dev %s, func %s, cnt %s' %(dev,func,cnt))
-
-		if dev!=self.dev_addr or func!=self.func_code or cnt!=self.reg_cnt:
+		if dev!=self.dev_addr or func!=self.func_code:
 			self.err_code ='ERR01'
 			return
 
@@ -91,4 +78,5 @@ class VacuumReader(object):
 		if rspn[expected-4] == '-':
 			exponent = -exponent
 		exponent	=exponent-2
-		self.rsp_dat  =pow(decimal,exponent)
+		self.rsp_dat  =decimal * pow(10,exponent)
+
