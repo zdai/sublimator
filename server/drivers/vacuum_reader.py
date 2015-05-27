@@ -70,9 +70,9 @@ class VacuumReader(object):
 		self.rsp_dat  =rspn[expected-6:expected-2]
 
 	def _get_decimal(self,hex_str):
-		decimal		=(int(hex_str[0],16)*100) + int(rspn[1],16)
-		exponent	=int(rspn[3],16)
-		if rspn[2] == '-':
+		decimal		=(int(hex_str[0],16)*100) + int(hex_str[1],16)
+		exponent	=int(hex_str[3],16)
+		if hex_str[2] == '-':
 			exponent = -exponent
 		exponent	=exponent-2
 		return decimal * pow(10,exponent)
