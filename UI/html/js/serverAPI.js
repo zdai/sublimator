@@ -1,5 +1,5 @@
 window.config=[];
-window.config.serverURL="http://192.168.1.65:8080/json"
+window.config.serverURL="http://192.168.1.66:8080/json"
 
 function serverAPI (){
 	this.log_msg="";
@@ -22,12 +22,12 @@ serverAPI.prototype.post=function(json_args,callback){
 	$.ajax({
 		url:window.config.serverURL,
 		type:"POST",
-		data:{OTI_DATA:JSON.stringify(json_args)},
+		data:{'OTI_DATA':JSON.stringify(json_args)},
 		success:function(result){
 			if (result != 'NaN'){
 				args=JSON.parse(result);
 				server.errCode(args.errCode)
-				server.log(args.logMsg);
+				//server.log(args.logMsg);
 				if (callback != null)
 					callback(args.data);
 			}

@@ -24,10 +24,12 @@
 		</div>
 
 		<div id="controlPanel">
+
 			<div id="tempCtrlSch" class="ctrlBlock">
 				<header>
 					Schedule for controller #<span id="tempCtrlId">0</span>
 				</header>
+
 				<table id="tempSchTable">
 					<tr><td>
 						Target(<sup>o</sup>C):
@@ -39,10 +41,12 @@
 						<input type="input" class="tempSchTime"/>
 					</td></tr>
 				</table>
+
 				<button type="button" id="tempSchAdd">Add</button>
 				<button type="button" id="tempSchSubmit">Submit</button>
 				<button type="button" id="tempSchCancel">Cancel</button>
 			</div>
+
 			<div id="globalState" class="ctrlBlock">
 				<header>
 					Device Status	
@@ -50,14 +54,14 @@
 
 				<table id="statusTable">
 					<tr><td>
-						Vacuum(pa)
-					</td><td>
-						:<span id='vacuumState'></span>
-					</td></tr>
-					<tr><td>
 						label
 					</td><td>
 						:<span id='processLabel'></span>
+					</td></tr>
+					<tr><td>
+						Vacuum(pa)
+					</td><td>
+						:<span id='vacuumState'></span>
 					</td></tr>
 					<tr><td>
 						elapse time	
@@ -65,14 +69,12 @@
 						:<span id='elapseTime'></span>
 					</td></tr>
 				</table>
-
 			</div>
 		</div>
 
 		<div id="lineChartPanel">
-			<div id="lineCharts">
-				<div id="temp_n_vacuum" class="lineChartInst" ></div>
-			</div>
+			<header> Line Chart</header>
+			<div id="temp_n_vacuum" class="lineChartInst" ></div>
 		</div>
 
 	</body>

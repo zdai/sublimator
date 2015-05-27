@@ -1,33 +1,33 @@
 
 /* actions on startup */
-window.imgTimer=null;
 window.curveTimer=null;
-window.imgUpdate
 $(document).ready(function(){
 	window.server = new serverAPI();
 	
 	var chartIDs=['#temp_n_vacuum'];
 	var chartArgs=[];
 	chartArgs.push({
-		chartTitle:"Current Density (log) vs. Voltage",
-		yType:"logarithmic",
+		chartTitle:"Temperature and Vacuum over Time",
+		yType:"linear",
 		xType:"linear",
-		xTitle:"Voltage(V)",
-		yTitle:"Current Density(mA/cm2)",
+		xTitle:"time",
+		yTitle:"",
 		yMaxID:null,
 		yTick:null
 	});
 	var legend='#legendList';
 	window.chartManager = new chartManager(legend,chartIDs,chartArgs);
 
-	window.tcScheduler 	= new tempCtrlSchedule('tempSchTable','tempCtrlId');
-	var tcBlocks=[];
+	window.tcScheduler 	= new tempCtrlSchedule('tempCtrlSch','tempSchTable','tempCtrlId');
+	window.tcBlocks=[];
 	for(var i=0;i<3;i++){
 		var tcBlock = new tempCtrlBlock('controlPanel',i);
-		tcBlocks.push(tcBlock);
+		window.tcBlocks.push(tcBlock);
 	}
 
-	//window.setInterval(run,3000);
+	window.setInterval(run,3000);
+	run(); //run for the first time
+
 });
 
 function run(){
@@ -35,6 +35,17 @@ function run(){
 }
 
 function update_status(state){
+	var pvArray	=state.temp_pv;
+	var svArray	=state.temp_sv;
+	var pwrArray=state.temp_pwr;
+	var modes	=state.temp_mode;
+	for(var i=0;i<window.tcBlocks.length;i++){
+		window.tcBlocks[i].update(pvArray[i],svArray[i],pwrArray[i],modes[i]);
+	}
+
+	$('#vacuumState').text(state.vacuum[0]);
+	$('#processLabel').text(state.label);
+	$('#elapseTime').text(state.elapse+'s');
 }
 
 /***************************************************************************
@@ -214,11 +225,25 @@ function setTcMode(id,mode){
 		$('#tempAutoCtrl'+id).show();
 	}
 };
+
+tempCtrlBlock.prototype.update=function (pv,sv,pwr,mode){
+	$('#tempPV'+this.headerId).text(pv);
+	if(mode == 'M'){
+		$('#tempSV'+this.headerId).text('__ __');
+		$('#tempManualMode'+this.headerId).click();
+	}
+	else if(mode == 'A'){
+		$('#tempSV'+this.headerId).text(sv);
+		$('#tempAutoMode'+this.headerId).click();
+	}
+	$('#tempPwr'+this.headerId).text(pwr);
+};
 /***************************************************************************
 * class		: tempCtrlSchedule 
 * purpose	: scheduler for multi-stage temperature controll
 ****************************************************************************/
-function tempCtrlSchedule(tempCtrl,header){
+function tempCtrlSchedule(parentCtrl,tempCtrl,header){
+	this.parentCtrl=parentCtrl;
 	this.tempCtrlId=tempCtrl;
 	this.headerId = header;
 	this.controller=0;
@@ -233,6 +258,9 @@ tempCtrlSchedule.prototype.init=function(ctrl){
 	this.targets=[];
 	this.schedules=[];
 	$('#'+this.tempCtrlId).empty();
+	var leftOffset=380+367*parseInt(ctrl);
+	var leftPx =leftOffset.toString()+'px';
+	$('#'+this.parentCtrl).css('left',leftPx);
 	$('#'+this.headerId).text(ctrl);
 	this.addRow();
 };

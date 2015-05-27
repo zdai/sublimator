@@ -1,6 +1,4 @@
 import time, sys
-sys.path.append("/usr/local/lib/python2.7/dist-packages/")
-
 import tornado.ioloop
 from tornado.web import *
 import tornado.websocket
@@ -108,7 +106,6 @@ application = tornado.web.Application( [
 sublimator = sublimator_server.SublimatorServer()
 def main():
 	try:
-		sublimator.start()
 		application.listen(PORT)
 		tornado.ioloop.IOLoop.instance().start()
 	except:

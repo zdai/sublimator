@@ -123,9 +123,13 @@
 			font-weight:bold;
 		}
 
+/*===================================================*/
 /* main page layout */
+/*===================================================*/
 	body {
+		width:1500px;
 		background-color: lightgrey;
+		margin: 10px auto;
 	}
 
 /*===================================================*/
@@ -133,7 +137,8 @@
 /* temperature and vaccum controller                 */
 /*===================================================*/
 	#controlPanel{
-		width:1900;
+		width:100%;
+		height:220px;
 		margin-left:0px;
 	}
 
@@ -212,20 +217,28 @@
 			margin-left:8px;
 		}
 
+/*===================================================*/
+/* temperature control scheduler                     */
+/*===================================================*/
 	#globalState{
 		width:360px;
 		border:1px;
 		border-style:ridge;
 		background-color:#FFFeF0;
 	}
+
+	#globalState table tbody tr td span{
+		color:red;
+	}
+
 /*===================================================*/
 /* temperature control scheduler                     */
 /*===================================================*/
 	#tempCtrlSch{
 		position:fixed;
 		left: 400px;
-		top:300px;
-		width:360px;
+		top:310px;
+		width:355px;
 		border:1px;
 		border-style:ridge;
 		background-color:#FFFeF0;
@@ -248,3 +261,14 @@
 			font-weight:bold;
 			width:100%
 		}
+
+/*===================================================*/
+/* line chart 
+/*===================================================*/
+
+	#lineChartPanel{
+		width:100%;
+		height:800px;
+		background-color:lightgrey;
+	}
+
