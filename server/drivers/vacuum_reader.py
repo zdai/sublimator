@@ -81,7 +81,7 @@ class VacuumReader(object):
 
 	def get_vacuum(self):
 		vac0=self._read_vacuum('01')
-		if self._get_decimal(vac0) < 0.11:
+		if self._get_decimal(vac0) <= 0.1:
 			return self._read_vacuum('02')
 		else:
 			return vac0

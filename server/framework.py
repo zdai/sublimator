@@ -101,8 +101,8 @@ class DebugStaticFileHandler(tornado.web.StaticFileHandler):
 
 application = tornado.web.Application( [
 	(r"/json", JHandler),
-	(r"/()",   DebugStaticFileHandler, {'path': '../UI/html/index.html'} ),
-	(r"/(.*)", DebugStaticFileHandler, {'path': '../UI/html/'}),
+	(r"/()",   DebugStaticFileHandler, {'path': '../ui/html/index.html'} ),
+	(r"/(.*)", DebugStaticFileHandler, {'path': '../ui/html/'}),
 ])
 
 sublimator = sublimator_server.SublimatorServer()
