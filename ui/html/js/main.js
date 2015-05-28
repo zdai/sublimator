@@ -3,20 +3,32 @@
 window.curveTimer=null;
 $(document).ready(function(){
 	window.server = new serverAPI();
-	
-	var chartIDs=['#temp_n_vacuum'];
-	var chartArgs=[];
-	chartArgs.push({
+
+	var yAxises=[];
+	yAxises.push({
+		format:'{value}°C',
+		formatter:null,
+		title:'temperature',
+		type:'linear',
+		opposite:false
+		});
+	yAxises.push({
+		format:'{value} Pa',
+		formatter:function(){return this.value.toExponential(1)},
+		title:'vacuum',
+		type:'logarithmic',
+		opposite:true
+		});
+
+	var chartArgs={
 		chartTitle:"Temperature and Vacuum over Time",
-		yType:"linear",
 		xType:"linear",
 		xTitle:"time",
-		yTitle:"",
-		yMaxID:null,
-		yTick:null
-	});
-	var legend='#legendList';
-	window.chartManager = new chartManager(legend,chartIDs,chartArgs);
+		yAxis:yAxises,
+		yMaxCtrl:null
+		};
+	var chartIDs='#temp_n_vacuum';
+	window.chartInst = new multiYaxisChart(chartIDs,chartArgs);
 
 	window.tcScheduler 	= new tempCtrlSchedule('tempCtrlSch','tempSchTable','tempCtrlId');
 	window.tcBlocks=[];
@@ -44,10 +56,11 @@ function update_status(state){
 		window.tcBlocks[i].update(pvArray[i],svArray[i],pwrArray[i],modes[i]);
 	}
 
-	var vcReading=state.vacuum[0]+'.'+state.vacuum[1]+'E'+state.vacuum.substring(2,4);
+	//var vcReading=state.vacuum[0]+'.'+state.vacuum[1]+'E'+state.vacuum.substring(2,4);
+	var vcReading=parseFloat(state.vacuum).toExponential(1);
 	$('#vacuumReading').text(vcReading);
 	$('#processLabel').text(state.label);
-	$('#elapseTime').text(state.elapse+'s');
+	$('#elapseTime').text(state.elapse);
 }
 
 function update_chart(raw){
@@ -55,27 +68,14 @@ function update_chart(raw){
 	var tempArr	=raw.temps;
 	var time	=raw.time;
 
-	var vacSeries = [];
-	for(var i=0; i<time.length; i++){
-		var tm=time[i];
-		var vc=vacuum[i];
-		vacSeries.push([tm,vc]);
-	}
+	window.chartInst.setXcategory(time);
 
-	var chartSeries=[vacSeries];
-	window.chartManager.appendSeries('vacuum',chartSeries,false);	
+	window.chartInst.appendSeries('vacuum',vacuum,1);	
 
-/*
-	for(var i=0;i<tempArr.length;i++){
-		var tempRaw = tempArr[i];
-		var tempSeries = [];
-		for(var t=0;t<time.length;t++)
-			tempSeries.push([time[t],tempRaw[t]]);
-		
-		window.chartManager.appendSeries('temp'+i,tempSeries,true);	
-	}
-	*/
+	for(var i=0;i<tempArr.length;i++)
+		window.chartInst.appendSeries('TC'+i,tempArr[i],0);	
 
+	window.chartInst.drawChart();
 }
 
 /***************************************************************************
@@ -320,5 +320,175 @@ tempCtrlSchedule.prototype.addRow=function(){
 	row.appendChild(tdTime);
 	row.appendChild(tdTimeValue);
 	document.getElementById(this.tempCtrlId).appendChild(row);
+};
+
+/***************************************************************************
+* line chart instance class
+****************************************************************************/
+function multiYaxisChart(id,args){
+	this.chartID=id;
+
+	this.chartTitle="";
+	this.xAxis={
+		title:"",
+		categories:[],
+		type:"linear"
+	};
+
+	this.yAxis=[];
+	this.legend={
+		layout:'vertical',
+        align: 'left',
+		verticalAlign:'top',
+		floating:true,
+		x:70,
+		y:30,
+		margin:0,
+		padding:0,
+		enabled:true
+	};
+
+	this.series=[];
+
+	this.sColor=["#7cb5ec","#434348","#90ed7d","#f7a35c","#8085e9",
+				"#f15c80","#e4d354","#2b908f","#f45b5b","#91e8e1",
+				"#007897"];
+	this.mSymbol=['circle','triangle','diamond','square','triangle-down'];
+
+	this.legendCnt = 0;
+	this.setup(args);
+}
+
+// setup x and y axis
+multiYaxisChart.prototype.setup=function(args){
+	if(args.xAxisCtrl)
+		this.xAxisCtrl=args.xAxisCtrl;
+
+	this.yMaxCtrl=args.yMaxCtrl;
+	this.chartTitle=args.chartTitle;
+	this.setXAxis(args.xTitle,args.xType);
+
+	var yAxis=args.yAxis;
+	for(var i=0;i<yAxis.length;i++)
+		this.addYAxis(yAxis[i].format,yAxis[i].formatter,yAxis[i].title,yAxis[i].type,yAxis[i].opposite);
+
+	this.series=[];
+	if(args.mouse != null)
+		this.mouseTracking = args.mouse;
+	else
+		this.mouseTracking = true;
+};
+
+multiYaxisChart.prototype.setXAxis=function(title,type){
+	this.xAxis.title=title;
+	this.xAxis.type=type;
+};
+
+multiYaxisChart.prototype.addYAxis=function(labelFormat,labelFormatter,title,type,opposite){
+	var index=this.yAxis.length;
+	var newAxis={
+		labels:{
+			format:labelFormat,
+			formatter:labelFormatter,
+			style:{
+				color:this.sColor[this.index%this.sColor.length]
+			}
+		},
+		title:{
+			text:title,
+			style:{
+				color:this.sColor[this.index%this.sColor.length]
+			}
+		},
+		type:type,
+		opposite:opposite
+		};
+	this.yAxis.push(newAxis);
+};
+
+// check if the specified data series already in the list 
+multiYaxisChart.prototype.getLabelID=function(label){
+	for(var i=0;i<this.series.length;i++)
+		if(this.series[i].name == label)
+			return i;
+	return -1;
+};
+
+// get the setting of next legend symbol
+multiYaxisChart.prototype.getNextLegend=function(){
+	var legend={};
+	legend.color =this.sColor [this.legendCnt % this.sColor.length ];
+	legend.symbol=this.mSymbol[this.legendCnt % this.mSymbol.length];
+	legend.fill  =this.sColor [this.legendCnt % this.sColor.length ];
+	if(parseInt(this.series.length/this.mSymbol.length+0.9)%2)
+		legend.fill='#FFFFFF';
+
+	return legend;
+};
+
+multiYaxisChart.prototype.setXcategory=function(xCategory){
+	this.xAxis.categories=xCategory;
+};
+
+// add new data series to the list 
+multiYaxisChart.prototype.appendSeries=function(label,data,yAxis){
+	if(label == null || label.length == 0)
+		return;
+
+	var index = this.getLabelID(label);
+	if (index == -1){
+		var legend=this.getNextLegend();
+		newSeries={
+			name:label,
+			data:data,
+			color:legend.color,
+			enableMouseTracking:this.mouseTracking,
+			yAxis:yAxis,
+			marker:{
+				lineColor:null,
+				lineWidth:1,
+				fillColor:legend.fill,
+				symbol:legend.symbol
+			}
+		};
+		this.series.push(newSeries);
+		this.legendCnt += 1;
+	}
+	else{ // if already exist, update the data 
+		this.series[index].data=data;
+	}
+};
+
+// draw the line chart 
+multiYaxisChart.prototype.drawChart=function(){
+	var drawSeries=[];
+	var yMax=null;
+	if(this.yMaxCtrl != null)
+		yMax=$(this.yMaxCtrl).val();
+
+	if(this.xAxisCtrl)
+		this.xAxis.type=$(this.xAxisCtrl).val();
+
+	var chart={
+		chart:{
+			backgroundColor:'#FFFEF0',
+			type:'spline'
+		},
+        title:{text: this.chartTitle},
+		plotOptions: {
+            series: {
+                animation: false
+            }
+        },
+		xAxis:{
+			title:{text:this.xAxis.title},
+			type:this.xAxis.type,
+			categories:this.xAxis.categories
+		},
+        yAxis:this.yAxis,
+        legend:this.legend,
+        series:this.series
+    };
+	$(this.chartID).highcharts(chart);
 };
 

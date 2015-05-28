@@ -1,21 +1,26 @@
 
 
-import serial,sys,time
+import serial,sys,time,random
+from drivers.dummy_serial import *
 
-class DummyVacuumReader(object):
-	def __init__(self,port,timeout):
-		pass
+class DummyVacuumSerial(DummySerial):
+	def __init__(self,port,echo,debug):
+		super(DummyVacuumSerial,self).__init__(port,echo,debug)
 
-	def get_vacuum(self):
-		return '18-2'
-
-	def _get_decimal(self,hex_str):
-		decimal		=(int(hex_str[0],16)*100) + int(hex_str[1],16)
-		exponent	=int(hex_str[3],16)
-		if hex_str[2] == '-':
-			exponent = -exponent
-		exponent	=exponent-2
-		return decimal * pow(10,exponent)
+	def read(self,cnt):
+		if self.debug:
+			prec ='010304'.decode('hex')
+			rint =chr(48+random.randint(0,9))
+			rdec =chr(48+random.randint(0,9))
+			rsig =random.choice('-----')
+			rexp =chr(48+random.randint(0,6))
+			crc  ='00'
+			if self.echo:
+				return self.wbuf+prec+rint+rdec+rsig+rexp+crc
+			else:
+				return prec+rint+rdec+rsig+rexp+crc
+		else:
+			return ''
 
 class VacuumReader(object):
 	def __init__(self,port,timeout,echo=True,debug=True):
@@ -28,7 +33,7 @@ class VacuumReader(object):
 		except:
 			print("unable to connect to the vacuum reader through port\
 			 %s! Err message %s" % (port,sys.exc_info()))
-			self.serial_interface =DummyVacuumReader(port,timeout)
+			self.serial_interface =DummyVacuumSerial(port,echo,debug)
 			self.dummy=True
 
 		self.debug 		=debug
@@ -44,9 +49,6 @@ class VacuumReader(object):
 			self.serial_interface.flush()
 
 	def _read_vacuum(self,dev_addr):
-		if self.dummy:
-			return '0000'
-
 		self.err_code	='ER00'
 		self.retry =0
 		while (self.err_code != "OK00") and (self.retry < self.max_retry):
@@ -55,7 +57,7 @@ class VacuumReader(object):
 			self._recv_response(dev_addr)
 			self.retry+=1
 
-		return self.rsp_dat
+		return self._convert_to_decimal(self.rsp_dat)
 
 	def _serial_read(self):
 		rspn  =self.serial_interface.read(100) #waiting for time out
@@ -72,28 +74,21 @@ class VacuumReader(object):
 			self.err_code ='ERR00'
 			return
 
-		dev  =rspn[expected-9].encode('hex')
-		func =rspn[expected-8].encode('hex')
-		if dev!=dev_addr or func!='03':
-			self.err_code ='ERR01'
-			return
-
 		self.err_code ='OK00'
 		self.rsp_dat  =rspn[expected-6:expected-2]
 
-	def _get_decimal(self,hex_str):
-		decimal		=(int(hex_str[0],16)*100) + int(hex_str[1],16)
-		exponent	=int(hex_str[3],16)
+	def _convert_to_decimal(self,hex_str):
+		decimal	=(int(hex_str[0],16)*10) + int(hex_str[1],16)
+		temp	=float(decimal)/10.0
+		exponent=int(hex_str[3],16)
 		if hex_str[2] == '-':
 			exponent = -exponent
-		exponent	=exponent-2
-		return decimal * pow(10,exponent)
-
+		return temp*pow(10,exponent)
 
 	def get_vacuum(self):
-		vac0=self._read_vacuum('01')
-		if self._get_decimal(vac0) <= 0.1:
-			return self._read_vacuum('02')
-		else:
-			return vac0
+		vac=self._read_vacuum('01')
+		if vac <= 0.1:
+			vac=self._read_vacuum('02')
+
+		return vac
 

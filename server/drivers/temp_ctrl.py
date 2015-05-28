@@ -1,16 +1,21 @@
 
 
-import serial,sys,time
+import serial,sys,time,random
+from drivers.dummy_serial import *
 
-class DummyTempController(object):
-	def __init__(self,port,timeout):
-		pass
 
-	def get_temp_pv(self):
-		return 102.3
+class DummyTcSerial(DummySerial):
+	def __init__(self,port,echo,debug):
+		super(DummyTcSerial,self).__init__(port,echo,debug)
 
-	def get_temp_sv(self):
-		return 25.4
+	def read(self,cnt):
+		if self.debug: # generate random number for debugging
+			temp=random.random()
+			temp*=100
+			return str(temp)
+		else:
+			return ''
+
 
 class TempController(object):
 	def __init__(self,port,baud=9600,timeout=1,echo=True,debug=True):
@@ -23,7 +28,7 @@ class TempController(object):
 		except:
 			print("unable to connect to the temperature controller through port\
 			 %s! Err message %s" % (port,sys.exc_info()))
-			self.serial_interface =DummyTempController(port,timeout)
+			self.serial_interface =DummyTcSerial(port,echo,debug)
 			self.dummy=True
 
 		self.debug 		=debug
@@ -39,39 +44,23 @@ class TempController(object):
 			self.serial_interface.flush()
 
 	def _read_register(self,reg_addr):
-		if self.dummy:
-			return 0
-
 		self.err_code	='ER00'
 		self.retry =0
 		while (self.err_code != "OK00") and (self.retry < self.max_retry):
 			self.cmd = '0103'+reg_addr
 			self.serial_interface.write(self.cmd.decode('hex'))
-			self._recv_response(dev_addr)
+			self._recv_response(reg_addr)
 			self.retry+=1
 
 	def _serial_read(self):
 		rspn  =self.serial_interface.read(100) #waiting for time out
 		return rspn
 
-	def _recv_response(self,dev_addr):
+	def _recv_response(self,reg_addr):
 		rspn =self._serial_read()
-		if self.echo:
-			expected =15
-		else:
-			expected =9
-		if len(rspn) < expected:
-			self.err_code ='ERR00'
-			return
-
-		dev  =rspn[expected-9].encode('hex')
-		func =rspn[expected-8].encode('hex')
-		if dev!=dev_addr or func!='03':
-			self.err_code ='ERR01'
-			return
 
 		self.err_code ='OK00'
-		self.rsp_dat  =rspn[expected-6:expected-2]
+		self.rsp_dat  =float(rspn)
 
 	def get_temp_pv(self):
 		self._read_register('1000')
