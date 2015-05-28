@@ -288,7 +288,7 @@ tempCtrlSchedule.prototype.init=function(ctrl){
 	this.targets=[];
 	this.schedules=[];
 	$('#'+this.tempCtrlId).empty();
-	var leftOffset=380+367*parseInt(ctrl);
+	var leftOffset=550+367*parseInt(ctrl);
 	var leftPx =leftOffset.toString()+'px';
 	$('#'+this.parentCtrl).css('left',leftPx);
 	$('#'+this.headerId).text(ctrl);

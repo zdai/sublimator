@@ -267,9 +267,11 @@
 /*===================================================*/
 
 	#lineChartPanel{
+		position:relative;
 		width:100%;
 		height:600px;
 		background-color:lightgrey;
+		z-index:-1;
 	}
 
 	#temp_n_vacuum{
