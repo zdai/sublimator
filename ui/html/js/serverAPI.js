@@ -1,5 +1,5 @@
 window.config=[];
-window.config.serverURL="http://192.168.1.66:8080/json"
+window.config.serverURL="http://192.168.1.65:8080/json"
 
 function serverAPI (){
 	this.log_msg="";

@@ -14,7 +14,7 @@ class SublimatorServer(GenericDelegate):
 		self.tc_cnt	=3 	# number of temperature controller
 		self.temp_ctrl=[None for _ in range(self.tc_cnt)]
 		for x in range(self.tc_cnt):
-			self.temp_ctrl[x] = TempController('/dev/ttyUSB'+str(x),1)
+			self.temp_ctrl[x] = TempController('/dev/ttyUSB'+str(x+1),1)
 
 		self.sample_interval=10 # seconds per sample
 		self.window_size	=1*3600  # window size in hour
@@ -24,14 +24,21 @@ class SublimatorServer(GenericDelegate):
 		self.temp_record	=[collections.deque(maxlen=self.sample_points) for _ in range(self.tc_cnt)]
 
 	def get_status(self,args=None):
+		elapse_time = ''
+		if len(self.elapse):
+			elapse_time=self.elapse[-1].strftime("%H:%M:%S")
+
+		vac=0
+		if len(self.vacuum_record):
+			vac=self.vacuum_record[-1]
 		dat={
 			'label'		:'Test Run',
-			'elapse'	:self.elapse[-1].strftime("%H:%M:%S"),
+			'elapse'	:elapse_time,
 			'temp_pv'	:[34.5,47.5,98.6],
 			'temp_sv'	:[66.0,75.0,105.0],
 			'temp_pwr'	:[80.0,90.0,95.5],
 			'temp_mode'	:['M','A','A'],
-			'vacuum'	:(self.vacuum_record[-1])
+			'vacuum'	:vac
 		}
 
 		return {'errCode':'ERR_OK','logMsg':'Loop back experiment!','data':dat}

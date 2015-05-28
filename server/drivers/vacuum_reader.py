@@ -66,6 +66,10 @@ class VacuumReader(object):
 	def _recv_response(self,dev_addr):
 		self.rsp_dat  ='0000'
 		rspn =self._serial_read()
+
+		if self.debug:
+			print("return from vacuum " + rspn.encode('hex'))
+
 		if self.echo:
 			expected =15
 		else:

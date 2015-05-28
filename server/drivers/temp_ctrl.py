@@ -11,10 +11,10 @@ class DummyTcSerial(DummySerial):
 	def read(self,cnt):
 		if self.debug: # generate random number for debugging
 			temp=random.random()
-			temp*=100
-			return str(temp)
+			temp=100.0*temp
+			return repr(temp)
 		else:
-			return ''
+			return '0.0'
 
 
 class TempController(object):
@@ -60,7 +60,11 @@ class TempController(object):
 		rspn =self._serial_read()
 
 		self.err_code ='OK00'
-		self.rsp_dat  =float(rspn)
+
+		if self.debug and self.dummy:
+			self.rsp_dat  =float(rspn)
+		else:
+			self.rsp_dat  = 0.0
 
 	def get_temp_pv(self):
 		self._read_register('1000')
