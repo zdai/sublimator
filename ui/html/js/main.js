@@ -259,7 +259,8 @@ function setTcMode(id,mode){
 tempCtrlBlock.prototype.update=function (pv,sv,pwr,mode){
 	$('#tempPV'+this.headerId).text(pv);
 	if(mode == 'M'){
-		$('#tempSV'+this.headerId).text('__ __');
+		//$('#tempSV'+this.headerId).text('__ __');
+		$('#tempSV'+this.headerId).text(sv);
 		$('#tempManualMode'+this.headerId).click();
 	}
 	else if(mode == 'A'){

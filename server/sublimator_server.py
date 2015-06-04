@@ -4,24 +4,48 @@ from datetime import datetime, timedelta
 import collections
 from drivers.vacuum_reader import *
 from drivers.temp_ctrl import *
+import ConfigParser
+from serial_manager import SerialManager
+import Queue,time
 
 class SublimatorServer(GenericDelegate):
 	def __init__(self):
 		super(SublimatorServer, self).__init__()
-		self.debug=False
-		self.vacuum = VacuumReader('/dev/ttyUSB0',1)
+		self.config=ConfigParser.ConfigParser()
+		try:
+			self.config.read('ini/sublimator.cfg')
+		except:
+			print("config file failed to open! {}".format(sys.exc_info()))
+			raise
 
-		self.tc_cnt	=3 	# number of temperature controller
-		self.temp_ctrl=[None for _ in range(self.tc_cnt)]
-		for x in range(self.tc_cnt):
-			self.temp_ctrl[x] = TempController('/dev/ttyUSB'+str(x+1),1)
+		self.exc_queue =Queue.Queue()
+		self.peripherals = SerialManager(self.config,self.exc_queue)
+		self.peripherals.start()
 
-		self.sample_interval=10 # seconds per sample
-		self.window_size	=1*3600  # window size in hour
+		self.debug			=self.config.getboolean("APP","debug")
+		self.sample_interval=self.config.getint("Sample_Control","rate")
+		self.window_size	=self.config.getint("Sample_Control","window_size")*3600
+		self.tc_cnt			=self.config.getint("Temperature_Controller","nTC")
 		self.sample_points	=int(self.window_size/self.sample_interval)
 		self.elapse 		=collections.deque(maxlen=self.sample_points)
 		self.vacuum_record	=collections.deque(maxlen=self.sample_points)
 		self.temp_record	=[collections.deque(maxlen=self.sample_points) for _ in range(self.tc_cnt)]
+
+		self.temp_sv		=[0 for _ in range(self.tc_cnt)]
+		self.temp_pv		=[0 for _ in range(self.tc_cnt)]
+		self.read_tc_sv()
+
+
+	def read_tc_sv(self):
+		for i,tc in enumerate(['01','02','03']):
+			args={
+				'dev':tc,
+				'reg':'1001'
+			}
+			reading=self.peripherals.read_temp_ctrl(args)
+			self.temp_sv[i]=reading/10.0
+			if self.debug:
+				print ("get temperature sv reading %f" % reading)
 
 	def get_status(self,args=None):
 		elapse_time = ''
@@ -31,11 +55,16 @@ class SublimatorServer(GenericDelegate):
 		vac=0
 		if len(self.vacuum_record):
 			vac=self.vacuum_record[-1]
+
+		for tc in range(self.tc_cnt):
+			if len(self.temp_record[tc]):
+				self.temp_pv[tc] = self.temp_record[tc][-1]
+
 		dat={
 			'label'		:'Test Run',
 			'elapse'	:elapse_time,
-			'temp_pv'	:[34.5,47.5,98.6],
-			'temp_sv'	:[66.0,75.0,105.0],
+			'temp_pv'	:self.temp_pv,
+			'temp_sv'	:self.temp_sv,
 			'temp_pwr'	:[80.0,90.0,95.5],
 			'temp_mode'	:['M','A','A'],
 			'vacuum'	:vac
@@ -69,8 +98,19 @@ class SublimatorServer(GenericDelegate):
 		for x in range(self.tc_cnt):
 			for i,v in enumerate(self.temp_record[x]):
 				temp_array[x].append(v)
-
 		return temp_array
+
+	def check_exception(self):
+		try:
+			exc=self.exc_queue.get(block=False)
+		except Queue.Empty:
+			pass
+		else:
+			exc_type, exc_obj, exc_trace = exc
+			# deal with the exception
+			print exc_type, exc_obj
+			print exc_trace
+			raise exc
 
 	def wake(self,args=None):
 		super(SublimatorServer, self).wake(args)
@@ -85,7 +125,17 @@ class SublimatorServer(GenericDelegate):
 
 	def take_sample(self):
 		self.elapse.append(datetime.now())
-		self.vacuum_record.append(self.vacuum.get_vacuum())
-		for x in range(self.tc_cnt):
-			self.temp_record[x].append(self.temp_ctrl[x].get_temp_pv())
+		self.vacuum_record.append(self.peripherals.read_vacuum())
+		if self.debug:
+			print ("get vacuum reading %f" % self.vacuum_record[-1])
+
+		for i,tc in enumerate(['01','02','03']):
+			args={
+				'dev':tc,
+				'reg':'1000'
+			}
+			reading=self.peripherals.read_temp_ctrl(args)
+			self.temp_record[i].append(reading/10.0)
+			if self.debug:
+				print ("get temperature pv reading %f" % reading)
 

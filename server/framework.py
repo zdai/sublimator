@@ -70,6 +70,7 @@ class JHandler(tornado.web.RequestHandler):
 # functions, and then the system will JSON your return value.
 class JActionableRequestHandler:
 	def invoke(self, action, arguments):
+		sublimator.check_exception()
 		if hasattr(self, action):
 			return getattr(self, action)(arguments)
 		else:
@@ -113,8 +114,6 @@ def main():
 	except:
 		print ("Interrupt due to exception {}".format(sys.exc_info()))
 		os._exit(1)
-
-	os._exit(0)
 
 if __name__ ==  "__main__":
 	main()

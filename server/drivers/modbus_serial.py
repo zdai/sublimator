@@ -1,4 +1,6 @@
 
+from PyCRC.CRC16 import CRC16
+
 class ModbusSerial(object):
 	def __init__(self,port, echo=True, debug=True):
 		self.port=port
@@ -44,3 +46,8 @@ class ModbusSerial(object):
 
 		return crc_low+crc_high
 
+	def open(self):
+		pass
+
+	def close(self):
+		pass

@@ -1,9 +1,9 @@
 
 
 import serial,sys,time,random
-from drivers.dummy_serial import *
+from drivers.modbus_serial import *
 
-class DummyVacuumSerial(DummySerial):
+class DummyVacuumSerial(ModbusSerial):
 	def __init__(self,port,echo,debug):
 		super(DummyVacuumSerial,self).__init__(port,echo,debug)
 
@@ -74,6 +74,7 @@ class VacuumReader(object):
 			expected =15
 		else:
 			expected =9
+
 		if len(rspn) < expected:
 			self.err_code ='ERR00'
 			return
