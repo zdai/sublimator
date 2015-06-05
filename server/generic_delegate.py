@@ -1,6 +1,6 @@
 import threading
 import Queue
-import json, os, sys, datetime
+import json, os, sys, datetime, traceback
 
 # The cryo-delegate is a daemon-like thread which
 # runs in parallel to the web server thread. It queries
@@ -19,13 +19,18 @@ class GenericDelegate(object):
 		if hasattr(self, action) and hasattr(getattr(self, action), '__call__'):
 			try:
 				return getattr(self, action)(arguments)
-
-			except MemoryError as e:
-				print ("exception: %s (AutotesterDelegate:%s)" % (e, action, arguments))
+			except: ## process exceptions from sublimator_server
+				print ("========exception in sublimator server==========")
+				exc=sys.exc_info()
+				exc_type, exc_obj, exc_trace = exc
+				print self
+				print exc_type, exc_obj
+				traceback.print_tb(exc_trace)
+				print ("*********************************************")
+				if not action == 'wake':
+					raise exc
 		else:
-			error = {"error": "Invalid action: the requested action '%s' is not implemented." % action}
-			print (error)
-			return error
+			return {'errCode':'ERR_00','alert':'Operation not supported!'}
 
 	# I think this function will respond to queries in a queue-like
 	# way, but it will also block until they respond. This function

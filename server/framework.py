@@ -1,4 +1,4 @@
-import time, sys
+import time, sys,traceback
 sys.path.append('/usr/local/lib/python2.7/dist-packages')
 
 import tornado.ioloop
@@ -27,8 +27,6 @@ GIT_HASH	= 0
 # requests and so forth from the browser. Eventually,
 # it will behave as a wrapper to another thing that
 # will interface with measurement devices.
-
-all_handlers = []
 
 class JHandler(tornado.web.RequestHandler):
 	def set_default_headers(self):
@@ -63,6 +61,15 @@ class JHandler(tornado.web.RequestHandler):
 	def on_finish(self):
 		pass
 
+	def _handle_request_exception(self,e):
+		print ("========exception in tornado request handler==========")
+		print e
+		print ("catch an unhandled exception!")
+		print ("*********************************************")
+		response ={'errCode':'ERR_00','alert':'uncaught exception in request handler'}
+		self.write(json.dumps(response))
+		os._exit(1)
+
 # The JActionableRequestHandler class basically completes actions that the browser
 # asks of it. It should be spoken to through the "invoke" function, which basically
 # searches to see if the actionablerequesthandler can handle that action, and if so,
@@ -70,7 +77,6 @@ class JHandler(tornado.web.RequestHandler):
 # functions, and then the system will JSON your return value.
 class JActionableRequestHandler:
 	def invoke(self, action, arguments):
-		sublimator.check_exception()
 		if hasattr(self, action):
 			return getattr(self, action)(arguments)
 		else:
@@ -100,13 +106,32 @@ class DebugStaticFileHandler(tornado.web.StaticFileHandler):
 		# removed when debugging is over.
 		self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
 
-application = tornado.web.Application( [
-	(r"/json", JHandler),
-	(r"/()",   DebugStaticFileHandler, {'path': '../ui/html/index.html'} ),
-	(r"/(.*)", DebugStaticFileHandler, {'path': '../ui/html/'}),
-])
+try:
+	application = tornado.web.Application( [
+		(r"/json", JHandler),
+		(r"/()",   DebugStaticFileHandler, {'path': '../ui/html/index.html'} ),
+		(r"/(.*)", DebugStaticFileHandler, {'path': '../ui/html/'}),
+	])
+except:
+	print ("========exception in tornado JHandler==========")
+	exc=sys.exc_info()
+	exc_type, exc_obj, exc_trace = exc
+	print exc_type, exc_obj
+	traceback.print_tb(exc_trace)
+	print ("*********************************************")
+	os._exit(1)
 
-sublimator = sublimator_server.SublimatorServer()
+try:
+	sublimator = sublimator_server.SublimatorServer()
+except:
+	print ("========exception in sublimator initialization==========")
+	exc=sys.exc_info()
+	exc_type, exc_obj, exc_trace = exc
+	print exc_type, exc_obj
+	traceback.print_tb(exc_trace)
+	print ("*********************************************")
+	os._exit(1)
+
 def main():
 	try:
 		application.listen(PORT)

@@ -14,12 +14,12 @@ class SublimatorServer(GenericDelegate):
 		self.config=ConfigParser.ConfigParser()
 		try:
 			self.config.read('ini/sublimator.cfg')
-		except:
+		except IOError:
 			print("config file failed to open! {}".format(sys.exc_info()))
 			raise
 
-		self.exc_queue =Queue.Queue()
-		self.peripherals = SerialManager(self.config,self.exc_queue)
+		self.exc_queue 	=Queue.Queue()
+		self.peripherals =SerialManager(self.config,self.exc_queue)
 		self.peripherals.start()
 
 		self.debug			=self.config.getboolean("APP","debug")
@@ -43,11 +43,14 @@ class SublimatorServer(GenericDelegate):
 				'reg':'1001'
 			}
 			reading=self.peripherals.read_temp_ctrl(args)
-			self.temp_sv[i]=reading/10.0
-			if self.debug:
-				print ("get temperature sv reading %f" % reading)
+			if reading:
+				self.temp_sv[i]=reading/10.0
+				if self.debug:
+					print ("get temperature sv reading %f" % reading)
 
 	def get_status(self,args=None):
+		self.check_exception()
+
 		elapse_time = ''
 		if len(self.elapse):
 			elapse_time=self.elapse[-1].strftime("%H:%M:%S")
@@ -100,17 +103,21 @@ class SublimatorServer(GenericDelegate):
 				temp_array[x].append(v)
 		return temp_array
 
+	############################################################
+	## process exceptions from sub-threads: serial-manager
+	############################################################
 	def check_exception(self):
 		try:
 			exc=self.exc_queue.get(block=False)
 		except Queue.Empty:
 			pass
 		else:
+			print ("========exception in serial manager==========")
 			exc_type, exc_obj, exc_trace = exc
-			# deal with the exception
 			print exc_type, exc_obj
-			print exc_trace
-			raise exc
+			traceback.print_tb(exc_trace)
+			print ("*********************************************")
+			self.exc_queue.task_done()
 
 	def wake(self,args=None):
 		super(SublimatorServer, self).wake(args)
@@ -125,17 +132,21 @@ class SublimatorServer(GenericDelegate):
 
 	def take_sample(self):
 		self.elapse.append(datetime.now())
-		self.vacuum_record.append(self.peripherals.read_vacuum())
-		if self.debug:
-			print ("get vacuum reading %f" % self.vacuum_record[-1])
+		vac=self.peripherals.read_vacuum()
+		if vac:
+			self.vacuum_record.append(vac)
+			if self.debug:
+				print ("get vacuum reading %f" % vac)
 
 		for i,tc in enumerate(['01','02','03']):
 			args={
 				'dev':tc,
 				'reg':'1000'
 			}
+
 			reading=self.peripherals.read_temp_ctrl(args)
-			self.temp_record[i].append(reading/10.0)
-			if self.debug:
-				print ("get temperature pv reading %f" % reading)
+			if reading:
+				self.temp_record[i].append(reading/10.0)
+				if self.debug:
+					print ("get temperature pv reading %f" % reading)
 
