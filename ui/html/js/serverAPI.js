@@ -1,5 +1,5 @@
 window.config=[];
-window.config.serverURL="http://192.168.1.75:8080/json"
+window.config.serverURL="http://192.168.1.66:8080/json"
 
 function serverAPI (){
 	this.log_msg="";
@@ -27,6 +27,8 @@ serverAPI.prototype.post=function(json_args,callback){
 			if (result != 'NaN'){
 				args=JSON.parse(result);
 				server.errCode(args.errCode)
+				if (args.alertMsg)
+					alert(args.alertMsg);
 				//server.log(args.logMsg);
 				if (callback != null)
 					callback(args.data);

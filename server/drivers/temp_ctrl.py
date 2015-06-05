@@ -4,6 +4,12 @@ import serial,sys,time,random
 from drivers.modbus_serial import *
 from PyCRC.CRC16 import CRC16
 
+class TcOpenError(Exception):
+	pass
+
+class TcMaxRetryError(Exception):
+	pass
+
 class DummyTcSerial(ModbusSerial):
 	def __init__(self,port,echo,debug):
 		super(DummyTcSerial,self).__init__(port,echo,debug)
@@ -24,6 +30,7 @@ class DummyTcSerial(ModbusSerial):
 
 class TempController(object):
 	def __init__(self,port,baud=9600,timeout=1,echo=True,debug=True):
+		self.debug 		=debug
 		try:
 			self.serial_interface =serial.Serial(
 				port=port,baudrate=baud,timeout=timeout,
@@ -35,8 +42,9 @@ class TempController(object):
 			 %s! Err message %s" % (port,sys.exc_info()))
 			self.serial_interface =DummyTcSerial(port,echo,debug)
 			self.dummy=True
+			if not self.debug:
+				raise TcOpenError
 
-		self.debug 		=debug
 		self.echo		=echo
 		self.rsp_dat	=0.0
 		self.err_code	='ER00'
@@ -58,6 +66,9 @@ class TempController(object):
 			self.serial_interface.write(self.cmd)
 			self._recv_response(dev_addr,reg_addr)
 			self.retry+=1
+
+		if self.retry == self.max_retry:
+			raise TcMaxRetryError
 
 	def _serial_read(self):
 		rspn=''

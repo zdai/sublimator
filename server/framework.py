@@ -50,7 +50,7 @@ class JHandler(tornado.web.RequestHandler):
 				arguments = {}
 				if 'arguments' in self.json_args:
 					arguments = self.json_args['arguments']
-				response = actionablerequesthandler.invoke( self.json_args['action'], arguments)
+					response = actionablerequesthandler.invoke( self.json_args['action'], arguments)
 			else:
 				response = "Invalid action: no action specified";
 		else:
@@ -62,12 +62,12 @@ class JHandler(tornado.web.RequestHandler):
 		pass
 
 	def _handle_request_exception(self,e):
-		print ("========exception in tornado request handler==========")
-		print e
-		print ("catch an unhandled exception!")
+		print ("========exception from generic delegate, killing the program==========")
+		exc=sys.exc_info()
+		exc_type, exc_obj, exc_trace = exc
+		print exc_type, exc_obj
+		traceback.print_tb(exc_trace)
 		print ("*********************************************")
-		response ={'errCode':'ERR_00','alert':'uncaught exception in request handler'}
-		self.write(json.dumps(response))
 		os._exit(1)
 
 # The JActionableRequestHandler class basically completes actions that the browser
@@ -136,6 +136,9 @@ def main():
 	try:
 		application.listen(PORT)
 		tornado.ioloop.IOLoop.instance().start()
+	except KeyboardInterrupt:
+		print ("Terminated by user!")
+		os._exit(0)
 	except:
 		print ("Interrupt due to exception {}".format(sys.exc_info()))
 		os._exit(1)

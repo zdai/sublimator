@@ -5,7 +5,7 @@ import collections
 from drivers.vacuum_reader import *
 from drivers.temp_ctrl import *
 import ConfigParser
-from serial_manager import SerialManager
+from serial_manager import *
 import Queue,time
 
 class SublimatorServer(GenericDelegate):
@@ -18,8 +18,8 @@ class SublimatorServer(GenericDelegate):
 			print("config file failed to open! {}".format(sys.exc_info()))
 			raise
 
-		self.exc_queue 	=Queue.Queue()
-		self.peripherals =SerialManager(self.config,self.exc_queue)
+		self.serial_exc	=Queue.Queue()
+		self.peripherals =SerialManager(self.config,self.serial_exc)
 		self.peripherals.start()
 
 		self.debug			=self.config.getboolean("APP","debug")
@@ -49,6 +49,9 @@ class SublimatorServer(GenericDelegate):
 					print ("get temperature sv reading %f" % reading)
 
 	def get_status(self,args=None):
+		# check for exception from sub-threads here
+		# because this function is called periodically
+		# by user interface in the main thread
 		self.check_exception()
 
 		elapse_time = ''
@@ -73,7 +76,7 @@ class SublimatorServer(GenericDelegate):
 			'vacuum'	:vac
 		}
 
-		return {'errCode':'ERR_OK','logMsg':'Loop back experiment!','data':dat}
+		return {'errCode':'ERR_OK','data':dat}
 
 
 	def get_chart(self,args=None):
@@ -104,20 +107,31 @@ class SublimatorServer(GenericDelegate):
 		return temp_array
 
 	############################################################
-	## process exceptions from sub-threads: serial-manager
+	## check if there are exceptions from sub-threads
+	## including the serial manager and wake threads
 	############################################################
 	def check_exception(self):
 		try:
-			exc=self.exc_queue.get(block=False)
+			exc=self.serial_exc.get(block=False)
 		except Queue.Empty:
+			print self.serial_exc
+			print "empty"
 			pass
 		else:
-			print ("========exception in serial manager==========")
+			print ("========exception from sub-threads==========")
 			exc_type, exc_obj, exc_trace = exc
-			print exc_type, exc_obj
+			print exc_type
+			print exc_obj
 			traceback.print_tb(exc_trace)
 			print ("*********************************************")
-			self.exc_queue.task_done()
+			self.serial_exc.task_done()
+
+			if exc_type == NotAlive:
+				print ("========restart serial manager due to previous exception==========")
+				self.peripherals =SerialManager(self.config,exc_queue)
+				self.peripherals.start()
+			else:
+				raise exc
 
 	def wake(self,args=None):
 		super(SublimatorServer, self).wake(args)

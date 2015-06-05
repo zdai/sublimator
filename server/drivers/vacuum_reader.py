@@ -3,6 +3,12 @@
 import serial,sys,time,random
 from drivers.modbus_serial import *
 
+class VacuumOpenError(Exception):
+	pass
+
+class VacuumMaxRetryError(Exception):
+	pass
+
 class DummyVacuumSerial(ModbusSerial):
 	def __init__(self,port,echo,debug):
 		super(DummyVacuumSerial,self).__init__(port,echo,debug)
@@ -16,7 +22,7 @@ class DummyVacuumSerial(ModbusSerial):
 			rexp =chr(48+random.randint(0,6))
 			crc  ='00'
 			if self.echo:
-				return self.wbuf+prec+rint+rdec+rsig+rexp+crc
+				return "2ds" #self.wbuf+prec+rint+rdec+rsig+rexp+crc
 			else:
 				return prec+rint+rdec+rsig+rexp+crc
 		else:
@@ -24,6 +30,7 @@ class DummyVacuumSerial(ModbusSerial):
 
 class VacuumReader(object):
 	def __init__(self,port,timeout,echo=True,debug=True):
+		self.debug 		=debug
 		try:
 			self.serial_interface =serial.Serial(
 				port=port,baudrate=9600,timeout=timeout,
@@ -35,8 +42,9 @@ class VacuumReader(object):
 			 %s! Err message %s" % (port,sys.exc_info()))
 			self.serial_interface =DummyVacuumSerial(port,echo,debug)
 			self.dummy=True
+			if not self.debug:
+				raise VacuumOpenError
 
-		self.debug 		=debug
 		self.echo		=echo
 		self.rsp_dat	='0000'
 		self.err_code	='ER00'
@@ -56,6 +64,9 @@ class VacuumReader(object):
 			self.serial_interface.write(self.cmd.decode('hex'))
 			self._recv_response(dev_addr)
 			self.retry+=1
+
+		if self.retry == self.max_retry:
+			raise VacuumMaxRetryError
 
 		return self._convert_to_decimal(self.rsp_dat)
 

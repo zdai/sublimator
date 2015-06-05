@@ -19,6 +19,7 @@ class ExternalExcThread(threading.Thread):
 		except: # catch all exceptions and pass to main thread
 			print("Catch an excepton in {}, throws to main thread".format(self))
 			print(sys.exc_info())
+			print self.external_exc
 			self.external_exc.put(sys.exc_info())
 
 

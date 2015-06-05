@@ -3,13 +3,13 @@ from drivers.temp_ctrl import *
 from exThread import ExternalExcThread
 import Queue, traceback
 
-class SerialManager(ExternalExcThread):
-	################################
-	# customized exceptions
-	################################
-	class NotAlive(Exception):
-		pass
+class NotAlive(Exception):
+	pass
 
+class SerialTimeOut(Exception):
+	pass
+
+class SerialManager(ExternalExcThread):
 	def __init__(self,conf,exc_queue):
 		try:
 			ExternalExcThread.__init__(self,exc_queue)
@@ -21,45 +21,46 @@ class SerialManager(ExternalExcThread):
 			self.debug=self.config.getboolean("APP","debug")
 			self.vacuum =VacuumReader(self.config.get("Vacuum","port"),1)
 			self.tc_cnt	=self.config.getint("Temperature_Controller","nTC")
-			self.timeout_cnt=[0 for _ in range(self.tc_cnt+1)]
 			self.temp_ctrl =TempController(self.config.get("Temperature_Controller","port"))
+			self.timeout_cnt=[0 for _ in range(self.tc_cnt+1)]
+			self.timeout_limit=3
 
 			self.mailbox = Queue.Queue()
 			self.retbox	 = Queue.Queue()
 
 	def read_vacuum(self,args=None):
 		if not self.isAlive():
-			self.external_exc.put(SerialManager.NotAlive())
 			return None
 
 		self.mailbox.put({'action':'read-vacuum','arguments':args})
 		try:
-			reading =self.retbox.get(timeout=3)
+			reading =self.retbox.get(timeout=5)
 		except Queue.Empty:
 			reading =None
 			self.timeout_cnt[0]+=1
-			print ("is alive? {}".format(self.isAlive()))
 			print ("read vacuum timeout %d" % self.timeout_cnt[0])
+			#raise SerialTimeOut()
+			self.external_exc.put([SerialTimeOut,SerialTimeOut(),sys.exc_info()[2]])
 		else:
 			self.retbox.task_done()
 		return reading
 
 	def read_temp_ctrl(self,args=None):
-		if not 'dev' in args or not 'reg' in args:
+		if not self.isAlive():
 			return None
 
-		if not self.isAlive():
-			self.external_exc.put(SerialManager.NotAlive())
+		if not 'dev' in args or not 'reg' in args:
 			return None
 
 		self.mailbox.put({'action':'read-tc','arguments':args})
 		try:
-			reading =self.retbox.get(timeout=3)
+			reading =self.retbox.get(timeout=5)
 		except Queue.Empty:
 			dev =int(args['dev'])
 			self.timeout_cnt[dev]+=1
 			print ("read temp ctrl %d timeout %d" % (dev,self.timeout_cnt[dev]))
 			reading =None
+			self.external_exc.put([SerialTimeOut,SerialTimeOut(),sys.exc_info()[2]])
 		else:
 			self.retbox.task_done()
 		return reading
@@ -80,7 +81,6 @@ class SerialManager(ExternalExcThread):
 	def _get_vacuum_reading(self,args=None):
 		reading =self.vacuum.get_vacuum()
 		self.retbox.put(reading)
-		raise TypeError
 
 	def _get_tc_reg(self,args=None):
 		if not 'dev' in args or not 'reg' in args:

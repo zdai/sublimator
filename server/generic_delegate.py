@@ -10,7 +10,7 @@ import json, os, sys, datetime, traceback
 class GenericDelegate(object):
 	def __init__(self):
 		self.stop_wake_thread = threading.Event()
-		self.wakethread = WakeThread(self.stop_wake_thread, self)
+		self.wakethread = WakeThread(self.stop_wake_thread,self)
 		self.wakethread.start()
 
 	# This function is used to call a function on itself based
@@ -20,15 +20,13 @@ class GenericDelegate(object):
 			try:
 				return getattr(self, action)(arguments)
 			except: ## process exceptions from sublimator_server
-				print ("========exception in sublimator server==========")
+				print ("========exception from sublimator server==========")
 				exc=sys.exc_info()
 				exc_type, exc_obj, exc_trace = exc
-				print self
 				print exc_type, exc_obj
 				traceback.print_tb(exc_trace)
 				print ("*********************************************")
-				if not action == 'wake':
-					raise exc
+				raise exc
 		else:
 			return {'errCode':'ERR_00','alert':'Operation not supported!'}
 
@@ -40,9 +38,6 @@ class GenericDelegate(object):
 		responder = self.invoke(action,arguments)
 		return responder
 
-	# This function is called periodically by a timer thread (e.g. every 30 seconds) via the
-	# CryoManagerThread object. It does regular housekeeping things, checks on temperatures
-	# and so on.
 	def wake(self, args=None):
 		pass
 
@@ -51,15 +46,12 @@ class GenericDelegate(object):
 
 
 class WakeThread(threading.Thread):
-	def __init__(self, event, cryomanager):
+	def __init__(self, event, owner):
 		threading.Thread.__init__(self)
-		self.cryomanager = cryomanager
-		self.stopped = event
+		self.stopped =event
+		self.main_thread =owner
 
 	def run(self):
-		index = 1
-		while not self.stopped.wait(0.25):
-			index = index % 60
-			self.cryomanager.ask('wake', {})
-			index += 1
+		while not self.stopped.wait(0.5):
+			self.main_thread.ask('wake', {})
 
