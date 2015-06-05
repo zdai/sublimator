@@ -22,14 +22,14 @@ class DummyVacuumSerial(ModbusSerial):
 			rexp =chr(48+random.randint(0,6))
 			crc  ='00'
 			if self.echo:
-				return "2ds" #self.wbuf+prec+rint+rdec+rsig+rexp+crc
+				return self.wbuf+prec+rint+rdec+rsig+rexp+crc
 			else:
 				return prec+rint+rdec+rsig+rexp+crc
 		else:
 			return ''
 
 class VacuumReader(object):
-	def __init__(self,port,timeout,echo=True,debug=True):
+	def __init__(self,port,timeout,debug=True,echo=True):
 		self.debug 		=debug
 		try:
 			self.serial_interface =serial.Serial(

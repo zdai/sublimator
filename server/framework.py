@@ -50,7 +50,7 @@ class JHandler(tornado.web.RequestHandler):
 				arguments = {}
 				if 'arguments' in self.json_args:
 					arguments = self.json_args['arguments']
-					response = actionablerequesthandler.invoke( self.json_args['action'], arguments)
+				response = actionablerequesthandler.invoke( self.json_args['action'], arguments)
 			else:
 				response = "Invalid action: no action specified";
 		else:

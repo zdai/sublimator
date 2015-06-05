@@ -49,10 +49,8 @@ class SublimatorServer(GenericDelegate):
 					print ("get temperature sv reading %f" % reading)
 
 	def get_status(self,args=None):
-		# check for exception from sub-threads here
-		# because this function is called periodically
-		# by user interface in the main thread
-		self.check_exception()
+		self.check_exception(self.serial_exc)
+		self.check_exception(self.wake_exc)
 
 		elapse_time = ''
 		if len(self.elapse):
@@ -110,12 +108,10 @@ class SublimatorServer(GenericDelegate):
 	## check if there are exceptions from sub-threads
 	## including the serial manager and wake threads
 	############################################################
-	def check_exception(self):
+	def check_exception(self,exc_queue):
 		try:
-			exc=self.serial_exc.get(block=False)
+			exc=exc_queue.get(block=False)
 		except Queue.Empty:
-			print self.serial_exc
-			print "empty"
 			pass
 		else:
 			print ("========exception from sub-threads==========")
@@ -124,14 +120,8 @@ class SublimatorServer(GenericDelegate):
 			print exc_obj
 			traceback.print_tb(exc_trace)
 			print ("*********************************************")
-			self.serial_exc.task_done()
-
-			if exc_type == NotAlive:
-				print ("========restart serial manager due to previous exception==========")
-				self.peripherals =SerialManager(self.config,exc_queue)
-				self.peripherals.start()
-			else:
-				raise exc
+			exc_queue.task_done()
+			raise exc
 
 	def wake(self,args=None):
 		super(SublimatorServer, self).wake(args)

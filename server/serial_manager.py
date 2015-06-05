@@ -19,9 +19,11 @@ class SerialManager(ExternalExcThread):
 		else:
 			self.config=conf
 			self.debug=self.config.getboolean("APP","debug")
-			self.vacuum =VacuumReader(self.config.get("Vacuum","port"),1)
+			self.vacuum =VacuumReader(port=self.config.get("Vacuum","port"),
+							timeout=1,debug=self.debug)
 			self.tc_cnt	=self.config.getint("Temperature_Controller","nTC")
-			self.temp_ctrl =TempController(self.config.get("Temperature_Controller","port"))
+			self.temp_ctrl =TempController(port=self.config.get("Temperature_Controller","port"),
+					debug=self.debug)
 			self.timeout_cnt=[0 for _ in range(self.tc_cnt+1)]
 			self.timeout_limit=3
 
@@ -39,8 +41,7 @@ class SerialManager(ExternalExcThread):
 			reading =None
 			self.timeout_cnt[0]+=1
 			print ("read vacuum timeout %d" % self.timeout_cnt[0])
-			#raise SerialTimeOut()
-			self.external_exc.put([SerialTimeOut,SerialTimeOut(),sys.exc_info()[2]])
+			raise SerialTimeOut()
 		else:
 			self.retbox.task_done()
 		return reading
@@ -60,7 +61,7 @@ class SerialManager(ExternalExcThread):
 			self.timeout_cnt[dev]+=1
 			print ("read temp ctrl %d timeout %d" % (dev,self.timeout_cnt[dev]))
 			reading =None
-			self.external_exc.put([SerialTimeOut,SerialTimeOut(),sys.exc_info()[2]])
+			raise SerialTimeOut()
 		else:
 			self.retbox.task_done()
 		return reading

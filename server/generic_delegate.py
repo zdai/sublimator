@@ -1,6 +1,7 @@
 import threading
 import Queue
 import json, os, sys, datetime, traceback
+from exThread import ExternalExcThread
 
 # The cryo-delegate is a daemon-like thread which
 # runs in parallel to the web server thread. It queries
@@ -10,7 +11,8 @@ import json, os, sys, datetime, traceback
 class GenericDelegate(object):
 	def __init__(self):
 		self.stop_wake_thread = threading.Event()
-		self.wakethread = WakeThread(self.stop_wake_thread,self)
+		self.wake_exc = Queue.Queue()
+		self.wakethread = WakeThread(self.stop_wake_thread,self,self.wake_exc)
 		self.wakethread.start()
 
 	# This function is used to call a function on itself based
@@ -45,13 +47,17 @@ class GenericDelegate(object):
 		pass
 
 
-class WakeThread(threading.Thread):
-	def __init__(self, event, owner):
-		threading.Thread.__init__(self)
+class WakeThread(ExternalExcThread):
+	def __init__(self, event, owner,exc_queue):
+		try:
+			ExternalExcThread.__init__(self,exc_queue)
+		except TypeError:
+			print ("ExternalExcThread requires a valid external exception queue")
+			raise
 		self.stopped =event
 		self.main_thread =owner
 
-	def run(self):
+	def run_with_exception(self):
 		while not self.stopped.wait(0.5):
-			self.main_thread.ask('wake', {})
+			self.main_thread.wake()
 
