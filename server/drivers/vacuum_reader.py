@@ -29,8 +29,9 @@ class DummyVacuumSerial(ModbusSerial):
 			return ''
 
 class VacuumReader(object):
-	def __init__(self,port,timeout,debug=True,echo=True):
+	def __init__(self,port,timeout,debug=True,verbal=True,echo=True):
 		self.debug 		=debug
+		self.verbal		=verbal
 		try:
 			self.serial_interface =serial.Serial(
 				port=port,baudrate=9600,timeout=timeout,
@@ -78,7 +79,7 @@ class VacuumReader(object):
 		self.rsp_dat  ='0000'
 		rspn =self._serial_read()
 
-		if self.debug:
+		if self.verbal:
 			print("return from vacuum " + rspn.encode('hex'))
 
 		if self.echo:

@@ -11,8 +11,8 @@ from exThread import ExternalExcThread
 class GenericDelegate(object):
 	def __init__(self):
 		self.stop_wake_thread = threading.Event()
-		self.wake_exc = Queue.Queue()
-		self.wakethread = WakeThread(self.stop_wake_thread,self,self.wake_exc)
+		self.exc_queue = Queue.Queue()
+		self.wakethread = WakeThread(self.stop_wake_thread,self,self.exc_queue)
 		self.wakethread.start()
 
 	# This function is used to call a function on itself based

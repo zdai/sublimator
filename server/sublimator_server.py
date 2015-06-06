@@ -18,11 +18,10 @@ class SublimatorServer(GenericDelegate):
 			print("config file failed to open! {}".format(sys.exc_info()))
 			raise
 
-		self.serial_exc	=Queue.Queue()
-		self.peripherals =SerialManager(self.config,self.serial_exc)
+		self.peripherals =SerialManager(self.config,self.exc_queue)
 		self.peripherals.start()
 
-		self.debug			=self.config.getboolean("APP","debug")
+		self.verbal			=self.config.getboolean("APP","verbal")
 		self.sample_interval=self.config.getint("Sample_Control","rate")
 		self.window_size	=self.config.getint("Sample_Control","window_size")*3600
 		self.tc_cnt			=self.config.getint("Temperature_Controller","nTC")
@@ -45,12 +44,11 @@ class SublimatorServer(GenericDelegate):
 			reading=self.peripherals.read_temp_ctrl(args)
 			if reading:
 				self.temp_sv[i]=reading/10.0
-				if self.debug:
+				if self.verbal:
 					print ("get temperature sv reading %f" % reading)
 
 	def get_status(self,args=None):
-		self.check_exception(self.serial_exc)
-		self.check_exception(self.wake_exc)
+		self.check_exception()
 
 		elapse_time = ''
 		if len(self.elapse):
@@ -108,9 +106,9 @@ class SublimatorServer(GenericDelegate):
 	## check if there are exceptions from sub-threads
 	## including the serial manager and wake threads
 	############################################################
-	def check_exception(self,exc_queue):
+	def check_exception(self):
 		try:
-			exc=exc_queue.get(block=False)
+			exc=self.exc_queue.get(block=False)
 		except Queue.Empty:
 			pass
 		else:
@@ -120,7 +118,7 @@ class SublimatorServer(GenericDelegate):
 			print exc_obj
 			traceback.print_tb(exc_trace)
 			print ("*********************************************")
-			exc_queue.task_done()
+			self.exc_queue.task_done()
 			raise exc
 
 	def wake(self,args=None):
@@ -139,7 +137,7 @@ class SublimatorServer(GenericDelegate):
 		vac=self.peripherals.read_vacuum()
 		if vac:
 			self.vacuum_record.append(vac)
-			if self.debug:
+			if self.verbal:
 				print ("get vacuum reading %f" % vac)
 
 		for i,tc in enumerate(['01','02','03']):
@@ -151,6 +149,6 @@ class SublimatorServer(GenericDelegate):
 			reading=self.peripherals.read_temp_ctrl(args)
 			if reading:
 				self.temp_record[i].append(reading/10.0)
-				if self.debug:
+				if self.verbal:
 					print ("get temperature pv reading %f" % reading)
 

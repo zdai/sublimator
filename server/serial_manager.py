@@ -19,8 +19,9 @@ class SerialManager(ExternalExcThread):
 		else:
 			self.config=conf
 			self.debug=self.config.getboolean("APP","debug")
+			self.verbal=self.config.getboolean("APP","verbal")
 			self.vacuum =VacuumReader(port=self.config.get("Vacuum","port"),
-							timeout=1,debug=self.debug)
+							timeout=1,debug=self.debug,verbal=self.verbal)
 			self.tc_cnt	=self.config.getint("Temperature_Controller","nTC")
 			self.temp_ctrl =TempController(port=self.config.get("Temperature_Controller","port"),
 					debug=self.debug)
